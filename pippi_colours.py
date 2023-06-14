@@ -67,18 +67,24 @@ class colourScheme:
   axisColour2D = 'Black'
 
   # Default markers and their colours
-  referenceMarkerInner = 'Cross'
-  referenceMarkerInnerScale = 0.7
-  referenceMarkerInnerColour = 'Black'
+  referenceMarkerInner = 'Times'
+  referenceMarkerInnerScale = 0.6
+  referenceMarkerInnerColour = 'Green'
   referenceMarkerOuter = 'Times'
-  referenceMarkerOuterScale = 0.7
-  referenceMarkerOuterColour = 'Yellow'
+  referenceMarkerOuterScale = 0.6
+  referenceMarkerOuterColour = 'Green'
+
+  # mainBestFitMarker = 'Star'
+  # mainBestFitMarkerScale = 0.8
+  # mainBestFitColour1D = '#300'
+  # mainBestFitColour2D = '#300'
+  # mainBestFitColourOutline2D = 'Black'
 
   mainBestFitMarker = 'Star'
-  mainBestFitMarkerScale = 0.8
-  mainBestFitColour1D = '#300'
-  mainBestFitColour2D = '#300'
-  mainBestFitColourOutline2D = 'Black'
+  mainBestFitMarkerScale = 0.6
+  mainBestFitColour1D = 'Purple'
+  mainBestFitColour2D = 'Purple'
+  mainBestFitColourOutline2D = 'Black'  
 
   mainPostMeanMarker = 'Bullet'
   mainPostMeanMarkerScale = 0.6

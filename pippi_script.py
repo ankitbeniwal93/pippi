@@ -48,12 +48,13 @@ logoLoc = dataObject('logo_loc',floatuple_list)
 logoWidth = dataObject('logo_width',floater)
 colours = dataObject('colour_scheme',internal)
 axisRanges = dataObject('axis_ranges',floatuple_dictionary)
+PLR_on_log_scale = dataObject('PLR_on_log_scale', boolean)
 yAxisAngle = dataObject('yaxis_number_angle',floater)
 refPoint = dataObject('reference_point',float_dictionary)
 refKey = dataObject('reference_text',string)
 keys = keys+[scriptdir,doComparison,postMeanOnPost,postMeanOnProf,bestFitOnPost,
         bestFitOnProf,doColourbar,doLegend1D,doLegend2D,legendLoc1D,legendLoc2D,
-        doHistograms,legendLines,blame,colours,axisRanges,yAxisAngle,refPoint,
+        doHistograms,legendLines,blame,colours,axisRanges,PLR_on_log_scale,yAxisAngle,refPoint,
         refKey,doKey1D,doKey2D,keyLoc1D,keyLoc2D,parsedir,logoFile,logoLoc,logoWidth]
 # Define pip file entries to be read from savedkeys file
 labels = dataObject('quantity_labels',string_dictionary)
@@ -63,7 +64,7 @@ lookupKeys = dataObject('lookup_keys',int_dictionary)
 # Constants
 blameFractionalVerticalOffset = 1.2e-2
 PosteriorIsMainInComboPlot = True
-likeColourbarString = 'Profile likelihood ratio $\Lambda=\mathcal{L}/\mathcal{L}_\mathrm{max}$'
+likeColourbarString = 'Profile likelihood ratio $\mathcal{L}/\mathcal{L}_\mathrm{max}$'
 postColourbarString = 'Relative probability $P/P_\mathrm{max}$'
 defaultLegendLocation = 'bl'
 defaultKeyLocation = 'tr'
@@ -171,6 +172,7 @@ def script(filename):
       ytrema = [0.0,1.0]
       yRange = 1.0
 
+      
       # Locate and scale logo (if any)
       if logoFile.value is not None:
         logoCoords = [xtrema[0]+logoLoc.value[0][0]*xRange,logoLoc.value[0][1]]
@@ -254,18 +256,34 @@ def script(filename):
                                           +str(top_margin)+','
                                           +str(bottom_margin)+'\\\n')
         outfile.write('  --xrange '+str(xtrema[0])+':'+str(xtrema[1])+'\\\n')
-        outfile.write('  --yrange 0:1\\\n')
-        outfile.write('  --ylabel \'Profile likelihood ratio $\Lambda=\mathcal{L}/\mathcal{L}_\mathrm{max}$\' /shift 2.1\\\n')
+
+        if PLR_on_log_scale.value:
+          outfile.write('  --ylog\\\n') # For log y-axis (Ankit)
+          outfile.write('  --yrange -2:0\\\n') # yrange in log10 (Ankit)
+        else:
+          outfile.write('  --yrange 0:1\\\n') # For linear y-axis (Ankit)
+          
+        outfile.write('  --ylabel \'Profile likelihood ratio $\mathcal{L}/\mathcal{L}_\mathrm{max}$\' /shift 2.1\\\n')
         outfile.write('  --xlabel \''+labels.value[plot]+'\'\\\n')
-        outfile.write('  --label-style x /scale 1.0 /shift 0.15 --label-style y /scale 1.0 /shift 0.15')
+        # outfile.write('  --label-style x /scale 1.0 /shift 0.15 --label-style y /scale 1.0 /shift 0.15')
+        outfile.write('  --label-style x /scale 1.0 /shift 0.15 --label-style y /scale 1.0 /shift 0.5 /angle -90.0 /valign ' + 'midheight')
         if yAxisAngle.value is not None: outfile.write(' /angle '+str(yAxisAngle.value))
         outfile.write('\\\n')
-        if contours1D is not None:
-          for i, contour in enumerate(contourLevels):
-            outfile.write('  --draw-line '+str(xtrema[0])+','+contour+' '+str(xtrema[1])+','+contour+' /color \'Black\' '+
+
+        if PLR_on_log_scale.value: 
+          if contours1D is not None:
+            for i, contour in enumerate(contourLevels):
+              outfile.write('  --draw-line '+str(xtrema[0])+','+str(np.log10(float(contour)))+' '+str(xtrema[1])+','+str(np.log10(float(contour)))+' /color \'Black\' '+
                           '/style Dashes /width '+str(float(colours.value.lineWidth1D)*0.5)+'\\\n')
-            outfile.write('  --draw-text '+str(xtrema[0]+0.045*(xtrema[1]-xtrema[0]))+','+str(float(contour)+0.005)+' \''+str(contours1D.value[i])+
-                          '\%CL\' /color \'Black\' /scale 0.5 /justification left /alignment bottom\\\n')
+              outfile.write('  --draw-text '+str(xtrema[0]+0.045*(xtrema[1]-xtrema[0]))+','+str(np.log10(float(contour)+0.005))+' \''+str(contours1D.value[i])+
+                        '\%\,CL\' /color \'Black\' /scale 0.5 /justification left /alignment bottom\\\n')
+        else:
+          if contours1D is not None:
+            for i, contour in enumerate(contourLevels):
+              outfile.write('  --draw-line '+str(xtrema[0])+','+contour+' '+str(xtrema[1])+','+contour+' /color \'Black\' '+
+                          '/style Dashes /width '+str(float(colours.value.lineWidth1D)*0.5)+'\\\n')
+              outfile.write('  --draw-text '+str(xtrema[0]+0.045*(xtrema[1]-xtrema[0]))+','+str(float(contour)+0.005)+' \''+str(contours1D.value[i])+
+                          '\%\,CL\' /color \'Black\' /scale 0.5 /justification left /alignment bottom\\\n')
         if doComparison.value:
           # Do everything for comparison chain
           outfile.write('  --plot '+currentSecParse+'_like1D'+histString+'.ct2@1:2 /fill xaxis /fill-transparency '+colours.value.fillTransparency1D+
@@ -284,9 +302,15 @@ def script(filename):
             outfile.write('  --draw-marker '+str(postMean)+','+str(yRange*colours.value.comparisonPostMeanMarkerScale/40.0)+' '+
                           colours.value.comparisonPostMeanMarker+' /color \''+colours.value.comparisonPostMeanColour+
                           '\' /scale '+str(colours.value.comparisonPostMeanMarkerScale)+' \\\n')
-        outfile.write('  --plot '+currentParse+'_like1D'+histString+'.ct2@1:2 /fill xaxis /fill-transparency '+colours.value.fillTransparency1D+
-                      ' /fill-color '+colours.value.mainProfColour1D+' /color '+colours.value.mainProfColour1D+
-                      ' /line-style '+colours.value.main1DLineStyle+' /line-width '+colours.value.lineWidth1D+'\\\n')
+        if PLR_on_log_scale.value:
+          outfile.write('  --plot '+currentParse+'_like1D'+histString+'.ct2@1:2 /fill-transparency '+colours.value.fillTransparency1D+
+                        ' /color '+colours.value.mainProfColour1D+
+                        ' /line-style '+colours.value.main1DLineStyle+' /line-width '+colours.value.lineWidth1D+'\\\n') # For log y-axis (Ankit)
+        else:
+          outfile.write('  --plot '+currentParse+'_like1D'+histString+'.ct2@1:2 /fill xaxis /fill-transparency '+colours.value.fillTransparency1D+
+                        ' /fill-color '+colours.value.mainProfColour1D+' /color '+colours.value.mainProfColour1D+
+                        ' /line-style '+colours.value.main1DLineStyle+' /line-width '+colours.value.lineWidth1D+'\\\n') # For linear y-axis (Ankit)
+
         if doLegend1D.value is not None and plot in doLegend1D.value:
           # Write legend
           try:

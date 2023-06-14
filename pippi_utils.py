@@ -248,8 +248,9 @@ def half(x): return x*0.5
 def negative(x): return -x
 def negativehalf(x): return -x*0.5
 def negln(x): return -np.log(x)
-permittedLikes = {'-lnlike':times1,'lnlike':negative,'-2lnlike':half,'chi2':half,'2lnlike':negativehalf,'like':negln}
-permittedLikes_samesign = ['-lnlike', '-2lnlike']
+def ts(x): return x*0.25
+permittedLikes = {'-lnlike':times1,'lnlike':negative,'-2lnlike':half,'chi2':half,'2lnlike':negativehalf,'like':negln, 'TS':ts}
+permittedLikes_samesign = ['-lnlike', '-2lnlike', 'TS']
 refLike = '-lnlike'
 
 permittedMults = ['mult','mult.','multiplicity','multiplic.','mtpcty','Posterior']
