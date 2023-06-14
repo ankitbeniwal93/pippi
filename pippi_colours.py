@@ -55,6 +55,8 @@ class colourScheme:
   # Default values for 2D contour plotting styles
   fillTransparency2D = '1.0'
   mainContourStyle = 'Solid'
+  secondContourStyle = 'Dots'
+  thirdContourStyle = 'Dashes'
   comparisonContourStyle = 'Solid'
   lineWidth2D = '0.9'
 

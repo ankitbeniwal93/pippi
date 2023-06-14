@@ -49,12 +49,13 @@ logoWidth = dataObject('logo_width',floater)
 colours = dataObject('colour_scheme',internal)
 axisRanges = dataObject('axis_ranges',floatuple_dictionary)
 PLR_on_log_scale = dataObject('PLR_on_log_scale', boolean)
+no_colourbar_2D = dataObject('no_colourbar_2D', boolean)
 yAxisAngle = dataObject('yaxis_number_angle',floater)
 refPoint = dataObject('reference_point',float_dictionary)
 refKey = dataObject('reference_text',string)
 keys = keys+[scriptdir,doComparison,postMeanOnPost,postMeanOnProf,bestFitOnPost,
         bestFitOnProf,doColourbar,doLegend1D,doLegend2D,legendLoc1D,legendLoc2D,
-        doHistograms,legendLines,blame,colours,axisRanges,PLR_on_log_scale,yAxisAngle,refPoint,
+        doHistograms,legendLines,blame,colours,axisRanges,PLR_on_log_scale,no_colourbar_2D,yAxisAngle,refPoint,
         refKey,doKey1D,doKey2D,keyLoc1D,keyLoc2D,parsedir,logoFile,logoLoc,logoWidth]
 # Define pip file entries to be read from savedkeys file
 labels = dataObject('quantity_labels',string_dictionary)
@@ -757,7 +758,10 @@ def script(filename):
           outfile.write("  --label-style zvalues /angle 270 /shift 0.4 /valign 'midheight'\\\n")
         outfile.write('  --plot '+currentParse+'_like2D.ct2@1:2:3 ')
         if doColourbar.value is not None and plot in doColourbar.value: outfile.write('/zaxis zvalues ')
-        outfile.write('/color-map \''+colours.value.colourMap(contourLevels,'like')+'\'\\\n')
+        if no_colourbar_2D.value:
+          outfile.write('/fill-transparency 1\\\n')
+        else: 
+          outfile.write('/color-map \''+colours.value.colourMap(contourLevels,'like')+'\'\\\n')
         if doComparison.value:
           # Do everything for comparison chain
           if contours2D.value is not None:
@@ -783,8 +787,13 @@ def script(filename):
         if contours2D.value is not None:
           # Plot contours
           for contour in contourLevels:
-            outfile.write('  --draw-contour '+contour+' /color '+colours.value.mainProfContourColour2D+
-                          ' /style '+colours.value.mainContourStyle+' /width '+colours.value.lineWidth2D+'\\\n')
+            if contour == contourLevels[0]:
+              outfile.write('  --draw-contour '+contour+' /color '+colours.value.mainProfContourColour2D+
+                            ' /style '+colours.value.mainContourStyle+' /width '+colours.value.lineWidth2D+'\\\n')
+            if contour == contourLevels[len(contourLevels)-1]:
+              outfile.write('  --draw-contour '+contour+' /color '+colours.value.mainProfContourColour2D+
+                            ' /style '+colours.value.secondContourStyle+' /width '+colours.value.lineWidth2D+'\\\n')
+
         if doLegend2D.value is not None and plot in doLegend2D.value:
           # Write legend
           try:
