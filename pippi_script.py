@@ -263,11 +263,10 @@ def script(filename):
           outfile.write('  --yrange -2:0\\\n') # yrange in log10 (Ankit)
         else:
           outfile.write('  --yrange 0:1\\\n') # For linear y-axis (Ankit)
-          
         outfile.write('  --ylabel \'Profile likelihood ratio $\mathcal{L}/\mathcal{L}_\mathrm{max}$\' /shift 2.1\\\n')
         outfile.write('  --xlabel \''+labels.value[plot]+'\'\\\n')
         # outfile.write('  --label-style x /scale 1.0 /shift 0.15 --label-style y /scale 1.0 /shift 0.15')
-        outfile.write('  --label-style x /scale 1.0 /shift 0.15 --label-style y /scale 1.0 /shift 0.5 /angle -90.0 /valign ' + 'midheight')
+        outfile.write('  --label-style x /scale 1.0 /shift 0.15 --label-style y /scale 1.0 /shift 0.75 /angle -90.0 /valign ' + 'midheight')
         if yAxisAngle.value is not None: outfile.write(' /angle '+str(yAxisAngle.value))
         outfile.write('\\\n')
 
@@ -414,7 +413,8 @@ def script(filename):
                                           +str(bottom_margin)+'\\\n')
         outfile.write('  --xrange '+str(xtrema[0])+':'+str(xtrema[1])+'\\\n')
         outfile.write('  --yrange 0:1\\\n')
-        outfile.write('  --ylabel \'Relative probability $P/P_\mathrm{max}$\' /shift 2.1\\\n')
+        if no_colourbar_2D.value == False:
+          outfile.write('  --ylabel \'Relative probability $P/P_\mathrm{max}$\' /shift 2.1\\\n')
         outfile.write('  --xlabel \''+labels.value[plot]+'\'\\\n')
         outfile.write('  --label-style x /scale 1.0 /shift 0.15 --label-style y /scale 1.0 /shift 0.15')
         if yAxisAngle.value is not None: outfile.write(' /angle '+str(yAxisAngle.value))
@@ -553,7 +553,8 @@ def script(filename):
                                           +str(bottom_margin)+'\\\n')
         outfile.write('  --xrange '+str(xtrema[0])+':'+str(xtrema[1])+'\\\n')
         outfile.write('  --yrange 0:1\\\n')
-        outfile.write('  --ylabel \'Relative probability $P/P_\mathrm{max}$\' /shift 2.1\\\n')
+        if no_colourbar_2D.value == False:
+          outfile.write('  --ylabel \'Relative probability $P/P_\mathrm{max}$\' /shift 2.1\\\n')
         outfile.write('  --xlabel \''+labels.value[plot]+'\'\\\n')
         outfile.write('  --label-style x /scale 1.0 /shift 0.15 --label-style y /scale 1.0 /shift 0.15')
         if yAxisAngle.value is not None: outfile.write(' /angle '+str(yAxisAngle.value))
@@ -663,7 +664,7 @@ def script(filename):
 
       # Determine plot size
       if plotSize.value == None or plotSize.value == '':
-        if doColourbar.value is not None and plot in doColourbar.value:
+        if doColourbar.value is not None and plot in doColourbar.value and no_colourbar_2D.value == True:
           plotSizeInternal = '12.5cm x 4in'
         else:
           plotSizeInternal = '11cm x 4in'
@@ -753,11 +754,11 @@ def script(filename):
         if yAxisAngle.value is not None: outfile.write(' /angle '+str(yAxisAngle.value))
         outfile.write("  /valign 'midheight'")
         outfile.write('\\\n  --xyz-map\\\n')
-        if doColourbar.value is not None and plot in doColourbar.value:
+        if doColourbar.value is not None and plot in doColourbar.value and no_colourbar_2D.value == False:
           outfile.write('  --new-zaxis zvalues /location right /bar_size \'0.5cm\'\\\n')
           outfile.write("  --label-style zvalues /angle 270 /shift 0.4 /valign 'midheight'\\\n")
         outfile.write('  --plot '+currentParse+'_like2D.ct2@1:2:3 ')
-        if doColourbar.value is not None and plot in doColourbar.value: outfile.write('/zaxis zvalues ')
+        if doColourbar.value is not None and plot in doColourbar.value and no_colourbar_2D.value == False: outfile.write('/zaxis zvalues ')
         if no_colourbar_2D.value:
           outfile.write('/fill-transparency 1\\\n')
         else: 
@@ -807,9 +808,12 @@ def script(filename):
         if bestFitOnProf.value:
           # Get best-fit point and plot it
           bestFit = getCentralVal(parseFilename,plot,'like',lookupKeys)
+          # outfile.write('  --draw-marker '+str(bestFit[0])+','+str(bestFit[1])+' '+
+          #               colours.value.mainBestFitMarker+' /fill-color \''+str(colours.value.mainBestFitColour2D)+'\' /stroke-color \''+str(colours.value.mainBestFitColourOutline2D)+
+          #               '\' /scale '+str(colours.value.mainBestFitMarkerScale)+' \\\n')
           outfile.write('  --draw-marker '+str(bestFit[0])+','+str(bestFit[1])+' '+
-                        colours.value.mainBestFitMarker+' /fill-color \''+str(colours.value.mainBestFitColour2D)+'\' /stroke-color \''+str(colours.value.mainBestFitColourOutline2D)+
-                        '\' /scale '+str(colours.value.mainBestFitMarkerScale)+' \\\n')
+                        colours.value.mainBestFitMarker+' /color \''+str(colours.value.mainBestFitColour2D)+
+                        '\' /scale '+str(colours.value.mainBestFitMarkerScale)+' \\\n')          
         if postMeanOnProf.value:
           # Get posterior mean and plot it
           postMean = getCentralVal(parseFilename,plot,'post',lookupKeys)
@@ -835,7 +839,8 @@ def script(filename):
           # Do labelling for colourbar
           outfile.write('  --y2 --plot '+currentParse+'_like2D.ct2@1:2:3 /fill-transparency 1\\\n')
           outfile.write('  --axis-style y /decoration ticks --yrange '+str(ytrema[0])+':'+str(ytrema[1])+'\\\n')
-          outfile.write('  --ylabel \''+likeColourbarString+'\' /shift 3.5 /angle 180 /scale 0.8\\\n')
+          if no_colourbar_2D.value == False:
+            outfile.write('  --ylabel \''+likeColourbarString+'\' /shift 3.5 /angle 180 /scale 0.8\\\n')
         outfile.close
         subprocess.call('chmod +x '+currentBase+'_like2D.bsh', shell=True)
 
@@ -923,12 +928,16 @@ def script(filename):
         if yAxisAngle.value is not None: outfile.write(' /angle '+str(yAxisAngle.value))
         outfile.write("  /valign 'midheight'")
         outfile.write('\\\n  --xyz-map\\\n')
-        if doColourbar.value is not None and plot in doColourbar.value:
+        if doColourbar.value is not None and plot in doColourbar.value and no_colourbar_2D.value == False:
           outfile.write('  --new-zaxis zvalues /location right /bar_size \'0.5cm\'\\\n')
           outfile.write("  --label-style zvalues /angle 270 /shift 0.4  /valign 'midheight'\\\n")
         outfile.write('  --plot '+currentParse+'_post2D.ct2@1:2:3 ')
-        if doColourbar.value is not None and plot in doColourbar.value: outfile.write('/zaxis zvalues ')
-        outfile.write('/color-map \''+colours.value.colourMap(mainContourLevels,'post')+'\'\\\n')
+        if doColourbar.value is not None and plot in doColourbar.value and no_colourbar_2D.value == False: outfile.write('/zaxis zvalues ')
+        
+        if no_colourbar_2D.value:
+          outfile.write('/fill-transparency 1\\\n')
+        else: 
+          outfile.write('/color-map \''+colours.value.colourMap(mainContourLevels,'post')+'\'\\\n')
         if doComparison.value:
           # Do everything for comparison chain
           if contours2D.value is not None:
@@ -950,11 +959,18 @@ def script(filename):
                           colours.value.comparisonPostMeanMarker+' /color \''+colours.value.comparisonPostMeanColour+
                           '\' /scale '+str(colours.value.comparisonPostMeanMarkerScale)+' \\\n')
         outfile.write('  --plot '+currentParse+'_post2D.ct2@1:2:3 /fill-transparency 1\\\n')
+
         if contours2D.value is not None:
           # Plot contours
           for contour in mainContourLevels:
-            outfile.write('  --draw-contour '+contour+' /color '+colours.value.mainPostContourColour2D+
-                          ' /style '+colours.value.mainContourStyle+' /width '+colours.value.lineWidth2D+'\\\n')
+            if contour == mainContourLevels[0]:
+              outfile.write('  --draw-contour '+contour+' /color '+colours.value.mainPostContourColour2D+
+                            ' /style '+colours.value.mainContourStyle+' /width '+colours.value.lineWidth2D+'\\\n')
+            
+            if contour == mainContourLevels[len(contourLevels)-1]:
+              outfile.write('  --draw-contour '+contour+' /color '+colours.value.mainPostContourColour2D+
+                            ' /style '+colours.value.secondContourStyle+' /width '+colours.value.lineWidth2D+'\\\n')
+            
         if doLegend2D.value is not None and plot in doLegend2D.value:
           # Write legend
           try:
@@ -995,7 +1011,8 @@ def script(filename):
           # Do labelling for colourbar
           outfile.write('  --y2 --plot '+currentParse+'_post2D.ct2@1:2:3 /fill-transparency 1\\\n')
           outfile.write('  --axis-style y /decoration ticks --yrange '+str(ytrema[0])+':'+str(ytrema[1])+'\\\n')
-          outfile.write('  --ylabel \''+postColourbarString+'\' /shift 3.5 /angle 180 /scale 0.8\\\n')
+          if no_colourbar_2D.value == False:
+            outfile.write('  --ylabel \''+postColourbarString+'\' /shift 3.5 /angle 180 /scale 0.8\\\n')
         outfile.close
         subprocess.call('chmod +x '+currentBase+'_post2D.bsh', shell=True)
 
